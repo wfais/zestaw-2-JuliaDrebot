@@ -23,7 +23,13 @@ def selekcja(text: str):
     # Przykład:
     #  selekcja("Ala ma 3 koty i 2 psy oraz żółw")
     #     -> ["koty", "oraz", "żółw"]
-    pass
+    #pass
+    if not text:
+        return []
+    znalezione = WORD_RE.findall(text)
+    wynik = [w.lower() for w in znalezione if len(w) > 3]
+    return wynik
+
 
 
 def ramka(text: str, width: int = 80) -> str:
@@ -38,7 +44,23 @@ def ramka(text: str, width: int = 80) -> str:
     #
     # Przykład:
     #   ramka("Kot", width=10)  ->  "[  Kot   ]"   (łącznie 10 znaków)
-    pass
+    # pass
+    if text is None:
+        text = ""
+    inner_width = max(0, width - 2)
+
+    if len(text) > inner_width:
+        if inner_width <= 0:
+            visible = ""
+        elif inner_width == 1:
+            visible = "\u2026"
+        else:
+            visible = text[: inner_width - 1] + "\u2026"
+    else:
+        visible = text
+
+    centered = visible.center(inner_width)
+    return f"[{centered}]"
 
 
 def main():
@@ -73,14 +95,27 @@ def main():
         #  - dolicz też do licznik_slow długość tej listy
         #  - zwiększ licznik 'pobrane' (udało się przetworzyć jedną próbkę)
         #  - opcjonalnie mała przerwa: time.sleep(0.05)
+        title = data.get("title") or ""
+        line = "\r" + ramka(title, 80)
+        print(line, end="", flush=True)
 
+        extract = data.get("extract") or ""
+        lista_slow = selekcja(extract)
+        cnt.update(lista_slow)
+        licznik_slow += len(lista_slow)
+        pobrane += 1
+        time.sleep(0.05)
 
+    print()
     print(f"Pobrano: {pobrane}")
     print(f"#Słowa:  {licznik_slow}")
     print(f"Unikalne:  {len(cnt)}\n")
 
     print("Najczęstsze 15 słów:")
     # tu wypisz w pętli, korzystając np. z most_common(15)
+    for word, count in cnt.most_common(15):
+        print(f"{word}: {count}")
+
 
 if __name__ == "__main__":
     main()

@@ -20,7 +20,13 @@ def policz_fragment_pi(pocz: int, kon: int, krok: float, wyniki: list[float], in
     #   - obliczyć lokalną sumę dla przydzielonego przedziału,
     #   - wpisać wynik do wyniki[indeks].
 
-    pass  # zaimplementuj obliczanie fragmentu całki dla danego wątku
+    #pass  # zaimplementuj obliczanie fragmentu całki dla danego wątku
+    lokalna_suma = 0.0
+    for i in range(pocz, kon):
+        x = (i + 0.5) * krok
+        lokalna_suma += 4.0 / (1.0 + x * x)
+
+    wyniki[indeks] = lokalna_suma
 
 
 def main():
@@ -43,6 +49,40 @@ def main():
     #   - obliczenie przybliżenia π jako sumy wyników z poszczególnych wątków,
     #   - pomiar czasu i wypisanie przyspieszenia.
     # ---------------------------------------------------------------
+    print("Liczba wątków | Czas [s] | Przybliżenie pi | Przyspieszenie")
+    print("-" * 65)
+    czasy = {}
+    for nw in LICZBA_WATKOW:
+        wyniki = [0.0 for _ in range(nw)]
+        watki = []
+        rozmiar = LICZBA_KROKOW // nw
+
+        start_time = time.perf_counter()
+
+        for idx in range(nw):
+            pocz = idx * rozmiar
+            kon = pocz + rozmiar
+            if idx == nw - 1:
+                kon = LICZBA_KROKOW
+
+            t = threading.Thread(
+                target=policz_fragment_pi,
+                args=(pocz, kon, krok, wyniki, idx)
+            )
+            watki.append(t)
+            t.start()
+
+        for t in watki:
+            t.join()
+
+        przyblizenie = sum(wyniki) * krok
+
+        elapsed = time.perf_counter() - start_time
+        czasy[nw] = elapsed
+        speedup = czasy[1] / elapsed if nw != 1 else 1.0
+
+        print(f"{nw:13d} | {elapsed:8.4f} | {przyblizenie:.10f} | {speedup:12.3f}")
+
 
 
 if __name__ == "__main__":
